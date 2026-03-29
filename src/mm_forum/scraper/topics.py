@@ -27,7 +27,16 @@ async def fetch_all_categories(client: RateLimitedClient) -> list[CategoryInfo]:
                 topic_count=cat.get("topic_count", 0),
             )
         )
-    logger.info("Found %d categories", len(categories))
+        for subcat in cat.get("subcategory_list", []):
+            categories.append(
+                CategoryInfo(
+                    id=subcat["id"],
+                    name=subcat["name"],
+                    slug=subcat["slug"],
+                    topic_count=subcat.get("topic_count", 0),
+                )
+            )
+    logger.info("Found %d categories (including subcategories)", len(categories))
     return categories
 
 
