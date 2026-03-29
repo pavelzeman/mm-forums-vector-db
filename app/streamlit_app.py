@@ -1,0 +1,86 @@
+import os
+
+import streamlit as st
+from qdrant_client import QdrantClient
+
+from mm_forum.config import Settings
+from mm_forum.db.store import Store
+from mm_forum.embedder.local import LocalEmbedder
+from mm_forum.embedder.openai_embedder import OpenAIEmbedder
+from mm_forum.vectordb.qdrant_store import QdrantStore
+
+st.set_page_config(page_title="Mattermost Forum Search", layout="wide")
+
+settings = Settings()
+
+
+@st.cache_resource
+def get_store():
+    return Store(settings.database_url)
+
+
+@st.cache_resource
+def get_qdrant():
+    client = QdrantClient(url=settings.qdrant_url)
+    return QdrantStore(client, collection_name=settings.qdrant_collection)
+
+
+@st.cache_resource
+def get_embedder():
+    if settings.embedding_model == "openai":
+        return OpenAIEmbedder(api_key=settings.openai_api_key)
+    return LocalEmbedder(model_name=settings.local_model_name)
+
+
+st.title("Mattermost Forum Search")
+st.caption("Semantic search over Mattermost community forum posts")
+
+query = st.text_input("Search", placeholder="e.g. how to configure LDAP with SSO")
+
+col1, col2 = st.columns([1, 3])
+with col1:
+    top_k = st.slider("Results", min_value=3, max_value=20, value=10)
+
+if query:
+    with st.spinner("Searching..."):
+        try:
+            embedder = get_embedder()
+            qdrant = get_qdrant()
+            vector = embedder.embed([query])[0]
+            results = qdrant.search(vector, limit=top_k)
+        except Exception as e:
+            st.error(f"Search failed: {e}")
+            results = []
+
+    if not results:
+        st.info("No results found.")
+    else:
+        for r in results:
+            payload = r.payload or {}
+            title = payload.get("topic_title", "Untitled")
+            url = payload.get("url", "#")
+            author = payload.get("username", "unknown")
+            content = payload.get("cooked_text", "")
+            score = r.score
+
+            with st.expander(f"**{title}** — score {score:.3f}"):
+                st.markdown(f"**Author:** {author} | [Open post]({url})")
+                st.markdown(content[:800] + ("…" if len(content) > 800 else ""))
+
+st.divider()
+
+with st.expander("Stats"):
+    try:
+        store = get_store()
+        with store.session() as s:
+            from sqlalchemy import text
+            topic_count = s.execute(text("SELECT COUNT(*) FROM topics")).scalar()
+            post_count = s.execute(text("SELECT COUNT(*) FROM posts")).scalar()
+            embedded = s.execute(
+                text("SELECT COUNT(*) FROM posts WHERE embedding_id IS NOT NULL")
+            ).scalar()
+        st.metric("Topics", topic_count)
+        st.metric("Posts", post_count)
+        st.metric("Embedded", embedded)
+    except Exception as e:
+        st.warning(f"Could not load stats: {e}")

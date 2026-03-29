@@ -1,0 +1,49 @@
+#cloud-config
+
+# Runs on first boot of a Hetzner Ubuntu 24.04 server.
+# Installs Docker, Docker Compose plugin, certbot, and git.
+# Does NOT start the app stack or provision SSL — those are manual steps.
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+  - certbot
+  - ufw
+
+package_update: true
+package_upgrade: true
+
+runcmd:
+  # Install Docker via official script
+  - curl -fsSL https://get.docker.com | sh
+
+  # Install Docker Compose plugin (v2)
+  - apt-get install -y docker-compose-plugin
+
+  # Enable and start Docker
+  - systemctl enable docker
+  - systemctl start docker
+
+  # Create a non-root deploy user in the docker group
+  - useradd -m -s /bin/bash -G docker deploy
+
+  # Create the app directory and hand it to deploy user
+  - mkdir -p /srv/mm-forums
+  - chown deploy:deploy /srv/mm-forums
+
+  # Configure UFW: allow SSH, HTTP, HTTPS; deny everything else
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+
+final_message: |
+  Server is ready. Next steps:
+    1. Point your domain's A record to this server's IP
+    2. SSH in and clone your repo to /srv/mm-forums
+    3. Copy .env (with DOMAIN, POSTGRES_PASSWORD, etc.) to /srv/mm-forums/.env
+    4. Run certbot to get SSL cert (see README)
+    5. Start the stack: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
