@@ -27,16 +27,7 @@ async def fetch_all_categories(client: RateLimitedClient) -> list[CategoryInfo]:
                 topic_count=cat.get("topic_count", 0),
             )
         )
-        for subcat in cat.get("subcategory_list", []):
-            categories.append(
-                CategoryInfo(
-                    id=subcat["id"],
-                    name=subcat["name"],
-                    slug=subcat["slug"],
-                    topic_count=subcat.get("topic_count", 0),
-                )
-            )
-    logger.info("Found %d categories (including subcategories)", len(categories))
+    logger.info("Found %d categories", len(categories))
     return categories
 
 
@@ -57,8 +48,11 @@ async def fetch_topics_for_category(
             break
 
         for topic in topics:
-            # Attach category info since it's not always in the topic payload
-            topic.setdefault("category_id", category.id)
+            # Always use the parent category id — subcategory ids from the
+            # topic payload may not exist in our categories table since
+            # Discourse only returns subcategory_ids (not the data) in
+            # /categories.json for this forum.
+            topic["category_id"] = category.id
             yield topic
             seen += 1
 
