@@ -8,7 +8,7 @@ services:
     ports: []  # served via nginx in prod
 
   streamlit:
-    image: ghcr.io/pavelzeman/mm-forums-vector-db:latest
+    build: .
     command: streamlit run app/streamlit_app.py --server.port=8501 --server.headless=true
     restart: unless-stopped
     depends_on:
