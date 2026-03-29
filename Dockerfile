@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system deps needed by psycopg2, lxml, etc.
+# System deps — cached unless this block changes
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
@@ -10,12 +10,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python package with all extras
-COPY pyproject.toml .
-COPY src/ src/
-RUN pip install --no-cache-dir ".[app]"
+# PyTorch CPU-only wheel (~200 MB vs ~800 MB with CUDA)
+# Installed separately so it stays cached even when other deps change
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
-# Copy application code
+# Install remaining dependencies
+# Stub out the package so pip can resolve deps without the real source
+COPY pyproject.toml .
+RUN mkdir -p src/mm_forum && touch src/mm_forum/__init__.py && \
+    pip install --no-cache-dir ".[app]"
+
+# Copy real source last — only invalidates layers below, not the pip install above
+COPY src/ src/
 COPY alembic.ini .
 COPY scripts/ scripts/
 COPY app/ app/
