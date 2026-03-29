@@ -218,6 +218,35 @@ embeddings have a per-token cost and require `OPENAI_API_KEY`.
 
 ---
 
+## Migrating to AWS
+
+When ready to move from Hetzner to AWS, use `deploy/migrate_to_aws.sh`. It requires
+SSH access to both servers from your laptop and no intermediate storage (S3, etc.).
+
+```bash
+HETZNER_HOST=46.224.111.133 \
+AWS_HOST=<ec2-ip> \
+AWS_USER=ec2-user \
+bash deploy/migrate_to_aws.sh
+```
+
+What it does:
+- **Postgres** — streams `pg_dump | pg_restore` directly Hetzner → laptop → AWS (no temp file)
+- **Qdrant** — takes a snapshot on Hetzner, stages it locally, uploads and restores on AWS
+- Prints a verification checklist before you flip DNS
+
+AWS prerequisite: the stack must be running (`docker compose up -d`) with an empty database
+before you run the script — it overwrites whatever is there.
+
+Migration order:
+1. Provision AWS infra and start the empty stack
+2. Run `migrate_to_aws.sh`
+3. Verify the app works on the AWS IP
+4. Update DNS A record to AWS IP
+5. Wait for TTL to expire, then shut down the Hetzner server
+
+---
+
 ## Re-running the pipeline
 
 ```bash
