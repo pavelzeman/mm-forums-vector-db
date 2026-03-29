@@ -1,11 +1,9 @@
 services:
   postgres:
     restart: unless-stopped
-    ports: []  # not exposed publicly in prod
 
   qdrant:
     restart: unless-stopped
-    ports: []  # served via nginx in prod
 
   streamlit:
     build: .
