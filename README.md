@@ -206,6 +206,23 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ---
 
+## Why is the first build slow?
+
+The Docker image is large (~1.2 GB) because `sentence-transformers` bundles:
+
+- **PyTorch** (~800 MB) — the deep learning framework, includes CUDA binaries even on CPU-only servers
+- **Hugging Face Transformers** (~200 MB)
+- **Model weights** — `all-MiniLM-L6-v2` is ~90 MB
+- **NumPy, SciPy, tokenizers** — ~100 MB
+
+PyTorch is the main culprit. Subsequent builds are fast because Docker caches the layer.
+
+**Alternative:** set `EMBEDDING_MODEL=openai` in `.env` to skip local inference entirely and
+use the OpenAI API instead. The image will be much smaller and builds will be faster, but
+embeddings will have a per-token cost and require `OPENAI_API_KEY`.
+
+---
+
 ## Re-running the pipeline
 
 ```bash
