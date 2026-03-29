@@ -16,6 +16,7 @@ COPY src/ src/
 RUN pip install --no-cache-dir ".[app]"
 
 # Copy application code
+COPY alembic.ini .
 COPY scripts/ scripts/
 COPY app/ app/
 
