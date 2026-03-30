@@ -20,8 +20,9 @@ COPY pyproject.toml .
 RUN mkdir -p src/mm_forum && touch src/mm_forum/__init__.py && \
     pip install --no-cache-dir ".[app]"
 
-# Copy real source last — only invalidates layers below, not the pip install above
+# Copy real source and reinstall the package (no-deps = reuse cached deps above)
 COPY src/ src/
+RUN pip install --no-cache-dir --no-deps .
 COPY alembic.ini .
 COPY scripts/ scripts/
 COPY app/ app/
