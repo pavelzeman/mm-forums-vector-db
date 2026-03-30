@@ -14,8 +14,7 @@ settings = Settings()
 
 @st.cache_resource
 def get_qdrant():
-    client = QdrantClient(url=settings.qdrant_url)
-    return QdrantStore(client, collection_name=settings.qdrant_collection)
+    return QdrantStore(url=settings.qdrant_url, collection=settings.qdrant_collection)
 
 
 @st.cache_resource
@@ -69,7 +68,7 @@ with st.expander("Stats"):
             topic_count = s.execute(text("SELECT COUNT(*) FROM topics")).scalar()
             post_count = s.execute(text("SELECT COUNT(*) FROM posts")).scalar()
             embedded = s.execute(
-                text("SELECT COUNT(*) FROM posts WHERE embedding_id IS NOT NULL")
+                text("SELECT COUNT(*) FROM posts WHERE embedded = true")
             ).scalar()
         st.metric("Topics", topic_count)
         st.metric("Posts", post_count)
