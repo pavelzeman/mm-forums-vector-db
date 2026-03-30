@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "text-embedding-3-small"
 
+    # LLM / RAG
+    llm_provider: Literal["ollama", "openai", "anthropic"] = "anthropic"
+    llm_model: str = "claude-opus-4-6"
+    anthropic_api_key: str = ""
+    llm_base_url: str = "http://ollama:11434"  # Ollama only
+    rag_context_posts: int = 8
+
     # Scraper
     scrape_delay_seconds: float = 1.0
     scrape_concurrency: int = 3

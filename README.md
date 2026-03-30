@@ -27,6 +27,12 @@ The model weights never change — we use a pre-trained model as-is.
 closest to the query vector. Not model inference — pure mathematical search (cosine
 similarity). Fast on CPU, unaffected by the embedding model size.
 
+**RAG (Retrieval Augmented Generation)** — the pattern that powers Answer mode.
+Retrieve relevant forum posts via vector search, pass their text as context to an LLM,
+and let the LLM synthesize a grounded answer. The LLM answers only from what the posts
+contain — no hallucination, every claim traceable to a source. See
+[docs/how-rag-works.md](docs/how-rag-works.md) for a detailed explanation.
+
 ## Architecture
 
 ```
@@ -38,6 +44,8 @@ run_scrape.py  ──►  PostgreSQL (topics, posts, categories)
 run_embed.py   ──►  Qdrant (vector embeddings)
                           │
 streamlit_app.py ──►  https://mmforums.mattermosteng.online
+      ├── Search mode: returns ranked forum post links
+      └── Answer mode: RAG — retrieves posts → LLM generates answer
 ```
 
 ## Docker Compose files

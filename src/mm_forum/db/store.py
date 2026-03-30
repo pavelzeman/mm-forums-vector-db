@@ -170,6 +170,10 @@ def get_topic_by_id(session: Session, topic_id: int) -> Topic | None:
     return session.get(Topic, topic_id)
 
 
+def get_posts_by_ids(session: Session, post_ids: list[int]) -> list[Post]:
+    return list(session.scalars(select(Post).where(Post.id.in_(post_ids))))
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
