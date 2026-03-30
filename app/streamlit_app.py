@@ -78,7 +78,7 @@ if query:
                     "text_preview": payload.get("text_preview", ""),
                 })
 
-            with st.spinner(f"Generating answer with {settings.llm_provider}…"):
+            with st.spinner(f"Generating answer with {settings.llm_provider}/{settings.llm_model} from Mattermost forum embeddings…"):
                 try:
                     llm = get_llm()
                     answer = llm.answer(query, context_posts)
