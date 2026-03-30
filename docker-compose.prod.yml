@@ -19,6 +19,11 @@ services:
       QDRANT_URL: http://qdrant:6333
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-local}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-5-20251001}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434}
+      RAG_CONTEXT_POSTS: ${RAG_CONTEXT_POSTS:-8}
 
   nginx:
     image: nginx:alpine
