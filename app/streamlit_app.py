@@ -24,6 +24,11 @@ def get_embedder():
     return LocalEmbedder(model_name=settings.local_model_name)
 
 
+# Pre-warm — initializes model and Qdrant connection at startup, not on first search
+with st.spinner("Loading search model…"):
+    get_embedder()
+    get_qdrant()
+
 st.title("Mattermost Forum Search")
 st.caption("Semantic search over Mattermost community forum posts")
 
