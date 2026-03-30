@@ -19,6 +19,14 @@ schema. Always run this after deploying a new version.
 **sentence-transformers** — Python library for generating text embeddings locally using
 pre-trained models. Requires PyTorch, which makes the Docker image large (~1.2 GB).
 
+**Inference** — running a trained model to produce outputs (embeddings). Happens twice:
+once in bulk when embedding all posts, and once per search query to embed the query text.
+The model weights never change — we use a pre-trained model as-is.
+
+**ANN (approximate nearest neighbour)** — the algorithm Qdrant uses to find vectors
+closest to the query vector. Not model inference — pure mathematical search (cosine
+similarity). Fast on CPU, unaffected by the embedding model size.
+
 ## Architecture
 
 ```
