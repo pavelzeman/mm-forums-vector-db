@@ -247,6 +247,66 @@ Migration order:
 
 ---
 
+## What the embedder does
+
+The scraper stores raw post text in Postgres. The embedder reads those posts and converts
+each one into a **vector** — a list of ~384 numbers representing the semantic meaning of
+the text. Similar meaning = similar numbers = close together in vector space.
+
+When you search, your query is converted to a vector the same way, and Qdrant finds the
+posts whose vectors are closest to it. This is why a query like
+*"users not receiving email notifications after SMTP setup"* finds relevant posts even if
+no post contains those exact words — it matches on **meaning**, not keywords.
+
+The vectors are stored in Qdrant. Postgres keeps the raw text and metadata. The two are
+linked by `embedding_id` on each post row.
+
+Run the embedder after every scrape to keep the vector index current:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec streamlit python scripts/run_embed.py
+```
+
+---
+
+## Sample search queries
+
+Use these to verify the search is working after embedding completes.
+Open **https://mmforums.mattermosteng.online** and try them in order.
+
+### Basic — single concept, obvious keyword match
+1. `how to install Mattermost`
+2. `reset password`
+3. `LDAP configuration`
+4. `mobile app notifications`
+5. `create a new channel`
+
+### Medium — multi-concept, less obvious phrasing
+1. `users not receiving email notifications after SMTP setup`
+2. `difference between team and channel admin permissions`
+3. `migrate from Slack to Mattermost`
+4. `webhook payload format for incoming messages`
+5. `plugin not showing up after install`
+
+### Advanced — situational, requires context understanding
+1. `server upgrade broke existing integrations and bots stopped responding`
+2. `high memory usage on self-hosted instance with many concurrent users`
+3. `guest accounts can see channels they shouldn't have access to`
+4. `how to archive old channels without losing message history for compliance`
+5. `custom emoji not syncing across cluster nodes`
+
+### Super advanced — cross-cutting, nuanced, expert-level
+These are the real test. A keyword search would struggle; semantic search should surface
+relevant threads even when the exact words don't appear in any post.
+
+1. `trade-offs between database connection pooling settings and Mattermost performance under load`
+2. `SAML SSO with Okta works for web but mobile app falls back to password auth`
+3. `configuring rate limiting to protect the API without breaking high-volume bot integrations`
+4. `recommended approach for zero-downtime Mattermost upgrades in a Kubernetes deployment`
+5. `audit log gaps when using read replicas — some user actions not appearing in compliance exports`
+
+---
+
 ## Re-running the pipeline
 
 ```bash
