@@ -49,15 +49,20 @@ if query:
     else:
         for r in results:
             payload = r.payload or {}
-            title = payload.get("topic_title", "Untitled")
-            url = payload.get("url", "#")
+            title = payload.get("title") or payload.get("topic_title") or "Untitled"
             author = payload.get("username", "unknown")
-            content = payload.get("cooked_text", "")
+            preview = payload.get("text_preview") or payload.get("cooked_text", "")
             score = r.score
+
+            # Construct Discourse URL from topic_id + post_number
+            topic_id = payload.get("topic_id")
+            post_number = payload.get("post_number", 1)
+            base = settings.forum_base_url.rstrip("/")
+            url = f"{base}/t/{topic_id}/{post_number}" if topic_id else "#"
 
             with st.expander(f"**{title}** — score {score:.3f}"):
                 st.markdown(f"**Author:** {author} | [Open post]({url})")
-                st.markdown(content[:800] + ("…" if len(content) > 800 else ""))
+                st.markdown(preview[:800] + ("…" if len(preview) > 800 else ""))
 
 st.divider()
 

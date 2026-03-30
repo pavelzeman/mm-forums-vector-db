@@ -105,6 +105,7 @@ def build_point(post: Post, topic: Topic, vector: list[float]) -> PointStruct:
     payload = {
         "post_id": post.id,
         "topic_id": post.topic_id,
+        "topic_slug": topic.slug,
         "post_number": post.post_number,
         "title": topic.title,
         "username": post.username,
