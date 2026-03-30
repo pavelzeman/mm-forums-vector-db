@@ -1,10 +1,8 @@
-import os
-
 import streamlit as st
 from qdrant_client import QdrantClient
 
 from mm_forum.config import Settings
-from mm_forum.db.store import Store
+from mm_forum.db.store import get_session
 from mm_forum.embedder.local import LocalEmbedder
 from mm_forum.embedder.openai_embedder import OpenAIEmbedder
 from mm_forum.vectordb.qdrant_store import QdrantStore
@@ -12,11 +10,6 @@ from mm_forum.vectordb.qdrant_store import QdrantStore
 st.set_page_config(page_title="Mattermost Forum Search", layout="wide")
 
 settings = Settings()
-
-
-@st.cache_resource
-def get_store():
-    return Store(settings.database_url)
 
 
 @st.cache_resource
@@ -71,9 +64,8 @@ st.divider()
 
 with st.expander("Stats"):
     try:
-        store = get_store()
-        with store.session() as s:
-            from sqlalchemy import text
+        from sqlalchemy import text
+        with get_session() as s:
             topic_count = s.execute(text("SELECT COUNT(*) FROM topics")).scalar()
             post_count = s.execute(text("SELECT COUNT(*) FROM posts")).scalar()
             embedded = s.execute(
